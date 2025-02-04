@@ -44,16 +44,15 @@ class TelegramBotClient:
                 print("Rate limit reached: You have reached the limit of 3 requests per day!")
                 return None
             
-            # Send "Download CSV" command
-            print("Requesting CSV download...")
-            await self.client.send_message(BOT_USERNAME, "Download CSV")
-            
-            # Check for rate limit again
-            await asyncio.sleep(3)
-            messages = await self.client.get_messages(BOT_USERNAME, limit=1)
-            if messages and "limit of 3 requests per day" in messages[0].text:
-                print("Rate limit reached: You have reached the limit of 3 requests per day!")
-                return None
+            # Click the "Download CSV" button
+            print("Clicking Download CSV button...")
+            async for message in self.client.iter_messages(BOT_USERNAME, limit=10):
+                if message.buttons:
+                    for row in message.buttons:
+                        for button in row:
+                            if "Download CSV" in button.text:
+                                await button.click()
+                                break
             
             print(f"Waiting {wait_time} seconds for file...")
             await asyncio.sleep(wait_time)
@@ -66,6 +65,17 @@ class TelegramBotClient:
                 elif messages and "limit of 3 requests per day" in messages[0].text:
                     print("Rate limit reached: You have reached the limit of 3 requests per day!")
                     return None
+                elif messages and "Wait 10 seconds before next request" in messages[0].text:
+                    print("Rate limit cooldown, waiting 12 seconds...")
+                    await asyncio.sleep(12)
+                    # Click the button again after cooldown
+                    async for message in self.client.iter_messages(BOT_USERNAME, limit=10):
+                        if message.buttons:
+                            for row in message.buttons:
+                                for button in row:
+                                    if "Download CSV" in button.text:
+                                        await button.click()
+                                        break
                 print(f"Attempt {attempt + 1}: Waiting for file...")
                 await asyncio.sleep(10)
             
