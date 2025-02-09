@@ -1,2 +1,6 @@
-telethon==1.38.1
-python-dotenv==1.0.1 
+python-dotenv
+pandas
+supabase
+telethon
+streamlit
+plotly 
