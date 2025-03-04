@@ -7,7 +7,7 @@ from inspect_csv import inspect_csv
 # Load environment variables
 load_dotenv()
 
-def process_csv_to_supabase():
+def process_csv_to_supabase(wallet_address=None):
     try:
         # Get Supabase credentials
         supabase_url = os.getenv('SUPABASE_URL')
@@ -22,13 +22,17 @@ def process_csv_to_supabase():
         if df is None:
             return False
             
+        # Add wallet_address column
+        if wallet_address:
+            df['wallet_address'] = wallet_address
+        
         # Convert DataFrame to list of dictionaries
         records = df.to_dict('records')
         
         # Insert data into Supabase
         result = supabase.table('wallet_transactions').insert(records).execute()
         
-        print(f"Successfully uploaded {len(records)} transactions to Supabase")
+        print(f"Successfully uploaded {len(records)} transactions for wallet {wallet_address}")
         return True
         
     except Exception as e:

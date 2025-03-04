@@ -24,27 +24,34 @@ def main():
     # Load data
     df = load_data()
     
+    # Wallet selector
+    wallets = df['wallet_address'].unique()
+    selected_wallet = st.selectbox("Select Wallet", wallets)
+    
+    # Filter data for selected wallet
+    wallet_df = df[df['wallet_address'] == selected_wallet]
+    
     # Summary metrics
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Total Transactions", len(df))
+        st.metric("Total Transactions", len(wallet_df))
     with col2:
-        st.metric("Open Positions", len(df[df['status'] == 'Open']))
+        st.metric("Open Positions", len(wallet_df[wallet_df['status'] == 'Open']))
     with col3:
-        st.metric("Closed Positions", len(df[df['status'] == 'Closed']))
+        st.metric("Closed Positions", len(wallet_df[wallet_df['status'] == 'Closed']))
     
     # Transactions table
     st.subheader("Recent Transactions")
-    st.dataframe(df)
+    st.dataframe(wallet_df)
     
     # ROI Distribution
     st.subheader("ROI Distribution")
-    df['roi_clean'] = df['roi_percentage'].str.rstrip('%').astype(float)
-    st.bar_chart(df['roi_clean'])
+    wallet_df['roi_clean'] = wallet_df['roi_percentage'].str.rstrip('%').astype(float)
+    st.bar_chart(wallet_df['roi_clean'])
     
     # Status breakdown using plotly
     st.subheader("Status Breakdown")
-    status_counts = df['status'].value_counts()
+    status_counts = wallet_df['status'].value_counts()
     fig = px.pie(values=status_counts.values, names=status_counts.index, title='Transaction Status')
     st.plotly_chart(fig)
 
