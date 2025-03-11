@@ -27,16 +27,13 @@ class TelegramBotClient:
     async def send_command_and_get_file(self, token: str, wait_time: int = 25):
         """
         Send a token command to the bot and wait for file response
-        Args:
-            token: The token command (e.g. '6apFFc4ydTtb1uWLK5SZ1JgWHY2L6Ajvw8eaiJFBFRfV')
-            wait_time: Time to wait for response in seconds
         """
         try:
             print(f"Sending token command: {token}")
             await self.client.send_message(BOT_USERNAME, token)
             
-            print(f"Waiting for account info...")
-            await asyncio.sleep(5)  # Wait for account info
+            print("Waiting for account info...")
+            await asyncio.sleep(15)  # Increased wait time for account info
             
             # Check for rate limit message
             messages = await self.client.get_messages(BOT_USERNAME, limit=1)
@@ -44,61 +41,82 @@ class TelegramBotClient:
                 print("Rate limit reached: You have reached the limit of 3 requests per day!")
                 return None
             
-            # Click the "Download CSV" button
-            print("Clicking Download CSV button...")
-            async for message in self.client.iter_messages(BOT_USERNAME, limit=10):
-                if message.buttons:
-                    for row in message.buttons:
-                        for button in row:
-                            if "Download CSV" in button.text:
-                                await button.click()
+            # Find and click the "Download CSV" button with retries
+            print("Looking for Download CSV button...")
+            button_found = False
+            retries = 3
+            
+            while retries > 0 and not button_found:
+                print(f"Searching for button (attempt {4-retries}/3)...")
+                async for message in self.client.iter_messages(BOT_USERNAME, limit=20):  # Increased limit
+                    if message.buttons:
+                        for row in message.buttons:
+                            for button in row:
+                                if "Download CSV" in button.text:
+                                    print("Found Download CSV button, clicking...")
+                                    await button.click()
+                                    button_found = True
+                                    break
+                            if button_found:
                                 break
-            
-            print(f"Waiting {wait_time} seconds for file...")
-            await asyncio.sleep(wait_time)
-            
-            # Try multiple times to get the file
-            for attempt in range(3):
-                messages = await self.client.get_messages(BOT_USERNAME, limit=1)
-                if messages and messages[0].file:
-                    break
-                elif messages and "limit of 3 requests per day" in messages[0].text:
-                    print("Rate limit reached: You have reached the limit of 3 requests per day!")
-                    return None
-                elif messages and "Wait 10 seconds before next request" in messages[0].text:
-                    print("Rate limit cooldown, waiting 12 seconds...")
-                    await asyncio.sleep(12)
-                    # Click the button again after cooldown
-                    async for message in self.client.iter_messages(BOT_USERNAME, limit=10):
-                        if message.buttons:
-                            for row in message.buttons:
-                                for button in row:
-                                    if "Download CSV" in button.text:
-                                        await button.click()
-                                        break
-                print(f"Attempt {attempt + 1}: Waiting for file...")
-                await asyncio.sleep(10)
-            
-            if messages:
-                message = messages[0]
-                if message.file:
-                    # Create downloads directory if it doesn't exist
-                    os.makedirs('downloads', exist_ok=True)
-                    
-                    # Generate filename with timestamp
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    filename = f"downloads/response_{timestamp}{os.path.splitext(message.file.name)[1]}"
-                    
-                    # Download the file
-                    await message.download_media(filename)
-                    print(f"File downloaded to: {filename}")
-                    return filename
-                else:
-                    print("No file received in response")
-                    return None
+                    if button_found:
+                        break
                 
+                if not button_found:
+                    print(f"Button not found, waiting 5 seconds before retry...")
+                    await asyncio.sleep(5)
+                    retries -= 1
+            
+            if not button_found:
+                print("Could not find Download CSV button after all retries")
+                return None
+            
+            # Wait for the file message
+            print(f"Button clicked, waiting for file message...")
+            await asyncio.sleep(10)  # Increased wait time for file
+            
+            # Get the file message with retries
+            file_found = False
+            retries = 3
+            
+            while retries > 0 and not file_found:
+                print(f"Checking for file (attempt {4-retries}/3)...")
+                messages = await self.client.get_messages(BOT_USERNAME, limit=5)
+                
+                for message in messages:
+                    if message.file:
+                        print("Found file message")
+                        # Create downloads directory if it doesn't exist
+                        downloads_dir = "downloads"
+                        os.makedirs(downloads_dir, exist_ok=True)
+                        
+                        # Generate filename with timestamp
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        filename = f"downloads/response_{timestamp}.csv"
+                        
+                        # Download the file
+                        print(f"Downloading file to: {filename}")
+                        await message.download_media(filename)
+                        
+                        # Verify file exists and has content
+                        if os.path.exists(filename) and os.path.getsize(filename) > 0:
+                            print(f"File successfully downloaded: {filename}")
+                            return filename
+                        
+                        file_found = True
+                        break
+                
+                if not file_found:
+                    print(f"File not found, waiting 5 seconds before retry...")
+                    await asyncio.sleep(5)
+                    retries -= 1
+            
+            if not file_found:
+                print("Could not find file message after all retries")
+                return None
+            
         except Exception as e:
-            print(f"Error: {str(e)}")
+            print(f"Error in send_command_and_get_file: {str(e)}")
             return None
             
     async def close(self):

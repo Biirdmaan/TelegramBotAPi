@@ -5,6 +5,7 @@ from store_csv_to_supabase import process_csv_to_supabase
 import subprocess
 from dotenv import load_dotenv
 import re
+import sys
 
 def validate_wallet_address(address):
     """Validate the wallet address format"""
@@ -62,5 +63,9 @@ def launch_dashboard():
     print("Launching dashboard...")
     subprocess.Popen(["python", "-m", "streamlit", "run", "dashboard.py"])
 
+def main():
+    print("Launching Streamlit Dashboard...")
+    subprocess.run([sys.executable, "-m", "streamlit", "run", "dashboard.py"])
+
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    main() 
