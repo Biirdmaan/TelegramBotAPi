@@ -7,6 +7,7 @@ from telegram_bot_client import TelegramBotClient
 from store_csv_to_supabase import process_csv_to_supabase
 import re
 import time
+import sys
 
 def init_supabase():
     url = st.secrets["SUPABASE_URL"]
@@ -275,6 +276,9 @@ def main():
     local_css()
     
     st.title("Solana Wallet Transaction Analyzer")
+    
+    # Add this to check Python version
+    st.sidebar.info(f"Python version: {sys.version}")
     
     # Load existing data
     df = load_data()
