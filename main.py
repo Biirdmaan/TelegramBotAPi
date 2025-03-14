@@ -3,7 +3,6 @@ import os
 from telegram_bot_client import TelegramBotClient
 from store_csv_to_supabase import process_csv_to_supabase
 import subprocess
-from dotenv import load_dotenv
 import re
 import sys
 
@@ -22,9 +21,6 @@ async def get_wallet_address():
         print("Invalid wallet address format. It should be 44 characters long and contain only letters and numbers.")
 
 async def main():
-    # Load environment variables
-    load_dotenv()
-    
     # Get and validate wallet address
     wallet_address = await get_wallet_address()
     

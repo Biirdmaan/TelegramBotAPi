@@ -1,17 +1,12 @@
 import streamlit as st
 import pandas as pd
 from supabase import create_client
-import os
-from dotenv import load_dotenv
 import plotly.express as px
 import asyncio
 from telegram_bot_client import TelegramBotClient
 from store_csv_to_supabase import process_csv_to_supabase
 import re
 import time
-
-# Load environment variables
-load_dotenv()
 
 def init_supabase():
     url = st.secrets["SUPABASE_URL"]
