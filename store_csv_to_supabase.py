@@ -16,6 +16,7 @@ def process_csv_to_supabase(wallet_address=None):
         df = inspect_csv()
         
         if df is None:
+            print("No valid CSV data found")
             return False
             
         # Add wallet_address column
