@@ -1,17 +1,13 @@
 import pandas as pd
 from supabase import create_client
-import os
-from dotenv import load_dotenv
+import streamlit as st
 from inspect_csv import inspect_csv
-
-# Load environment variables
-load_dotenv()
 
 def process_csv_to_supabase(wallet_address=None):
     try:
-        # Get Supabase credentials
-        supabase_url = os.getenv('SUPABASE_URL')
-        supabase_key = os.getenv('SUPABASE_KEY')
+        # Get Supabase credentials from Streamlit secrets
+        supabase_url = st.secrets["SUPABASE_URL"]
+        supabase_key = st.secrets["SUPABASE_KEY"]
         
         # Initialize Supabase client
         supabase = create_client(supabase_url, supabase_key)

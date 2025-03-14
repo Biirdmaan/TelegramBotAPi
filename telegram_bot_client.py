@@ -3,17 +3,13 @@ from telethon import events
 import asyncio
 import os
 from datetime import datetime
-from dotenv import load_dotenv
+import streamlit as st
 
-load_dotenv()
-
-# Telegram API credentials - Replace with your own
-API_ID = os.getenv('API_ID')
-API_HASH = os.getenv('API_HASH')
-PHONE_NUMBER = os.getenv('PHONE_NUMBER')
-
-# Bot details
-BOT_USERNAME = os.getenv('BOT_USERNAME')
+# Telegram API credentials from Streamlit secrets
+API_ID = st.secrets["API_ID"]
+API_HASH = st.secrets["API_HASH"]
+PHONE_NUMBER = st.secrets["PHONE_NUMBER"]
+BOT_USERNAME = st.secrets["BOT_USERNAME"]
 
 class TelegramBotClient:
     def __init__(self):

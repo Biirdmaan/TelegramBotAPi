@@ -9,8 +9,8 @@ import plotly.express as px
 load_dotenv()
 
 def init_supabase():
-    url = os.getenv('SUPABASE_URL')
-    key = os.getenv('SUPABASE_KEY')
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
     return create_client(url, key)
 
 def load_data():
