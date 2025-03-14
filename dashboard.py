@@ -10,14 +10,22 @@ import time
 import sys
 
 def init_supabase():
-    url = st.secrets["SUPABASE_URL"]
-    key = st.secrets["SUPABASE_KEY"]
-    return create_client(url, key)
+    try:
+        url = st.secrets["SUPABASE_URL"]
+        key = st.secrets["SUPABASE_KEY"]
+        return create_client(url, key)
+    except Exception as e:
+        st.error(f"Failed to initialize Supabase: {str(e)}")
+        st.error("Please check your secrets configuration")
+        return None
 
 def load_data():
     """Load all wallet data from Supabase"""
     try:
         supabase = init_supabase()
+        if not supabase:
+            return pd.DataFrame()
+            
         response = supabase.table('wallet_transactions').select("*").execute()
         return pd.DataFrame(response.data)
     except Exception as e:
@@ -277,55 +285,65 @@ def main():
     
     st.title("Solana Wallet Transaction Analyzer")
     
-    # Add this to check Python version
+    # Debug information
     st.sidebar.info(f"Python version: {sys.version}")
     
-    # Load existing data
-    df = load_data()
-    existing_wallets = sorted(df['wallet_address'].unique()) if not df.empty else []
-    
-    # Create two columns with better proportions
-    col1, col2 = st.columns([1, 4])
-    
-    # Left column for new wallet input
-    with col1:
-        st.markdown("### Add New Wallet")
-        new_wallet = st.text_input(
-            "Wallet Address (44 characters)",
-            key="wallet_input",
-            help="Enter a valid Solana wallet address"
-        )
-        fetch_button = st.button("🔍 Fetch Wallet Data")
+    try:
+        # Load existing data
+        df = load_data()
         
-        # Create a placeholder for status messages
-        status_placeholder = st.empty()
+        if df.empty:
+            st.info("No data available. Please add a wallet using the form.")
+            return
+            
+        existing_wallets = sorted(df['wallet_address'].unique()) if not df.empty else []
         
-        if fetch_button:
-            if validate_wallet_address(new_wallet):
-                try:
-                    with st.spinner('🔄 Processing...'):
-                        success = asyncio.run(fetch_new_wallet_data(new_wallet, status_placeholder))
-                        if success:
-                            time.sleep(1)
-                            st.experimental_rerun()
-                except Exception as e:
-                    print(f"DEBUG: Error in main: {str(e)}")
-                    status_placeholder.error("🚫 Service temporarily unavailable")
-            else:
-                status_placeholder.error("❌ Invalid wallet address format")
-    
-    # Right column for existing wallet data
-    with col2:
-        if existing_wallets:
-            selected_wallet = st.selectbox(
-                "Select Wallet Address",
-                existing_wallets,
-                index=0,
-                help="Choose a wallet to view its transactions"
+        # Create two columns with better proportions
+        col1, col2 = st.columns([1, 4])
+        
+        # Left column for new wallet input
+        with col1:
+            st.markdown("### Add New Wallet")
+            new_wallet = st.text_input(
+                "Wallet Address (44 characters)",
+                key="wallet_input",
+                help="Enter a valid Solana wallet address"
             )
-            display_wallet_data(df, selected_wallet)
-        else:
-            st.info("💡 No wallet data available. Add a new wallet using the form on the left.")
+            fetch_button = st.button("🔍 Fetch Wallet Data")
+            
+            # Create a placeholder for status messages
+            status_placeholder = st.empty()
+            
+            if fetch_button:
+                if validate_wallet_address(new_wallet):
+                    try:
+                        with st.spinner('🔄 Processing...'):
+                            success = asyncio.run(fetch_new_wallet_data(new_wallet, status_placeholder))
+                            if success:
+                                time.sleep(1)
+                                st.experimental_rerun()
+                    except Exception as e:
+                        print(f"DEBUG: Error in main: {str(e)}")
+                        status_placeholder.error("🚫 Service temporarily unavailable")
+                else:
+                    status_placeholder.error("❌ Invalid wallet address format")
+        
+        # Right column for existing wallet data
+        with col2:
+            if existing_wallets:
+                selected_wallet = st.selectbox(
+                    "Select Wallet Address",
+                    existing_wallets,
+                    index=0,
+                    help="Choose a wallet to view its transactions"
+                )
+                display_wallet_data(df, selected_wallet)
+            else:
+                st.info("💡 No wallet data available. Add a new wallet using the form on the left.")
+        
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
+        st.error("Please check the logs for more details")
 
 if __name__ == "__main__":
     main() 

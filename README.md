@@ -15,44 +15,50 @@ A Python application that fetches Solana wallet transaction data from a Telegram
 
 ## Prerequisites
 
-- Python 3.7+
+- Python 3.12 (Required for Streamlit Cloud deployment)
 - Telegram API credentials (API_ID and API_HASH)
 - Supabase account and project credentials
 - Solana wallet address to analyze
 
 ## Installation
 
-1. Clone the repository:3
-bash
-git clone <your-repo-url>
-cd solana-wallet-analyzer
+1. Clone the repository:
+```bash
+git clone https://github.com/Biirdmaan/TelegramBotAPi.git
+cd TelegramBotAPi
+```
 
-2. Install dependencies:
-bash
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv_py312
+.\venv_py312\Scripts\activate  # Windows
+source venv_py312/bin/activate # Linux/Mac
+```
+
+3. Install dependencies:
+```bash
 pip install -r requirements.txt
+```
 
-3. Configure environment variables:
+4. Create a `.streamlit/secrets.toml` file with your credentials:
+```toml
+# Telegram credentials
+API_ID = "your_telegram_api_id"
+API_HASH = "your_telegram_api_hash"
+PHONE_NUMBER = "your_phone_number"
+BOT_USERNAME = "walletx_solana_bot"
 
-env
-API_ID=your_telegram_api_id
-API_HASH=your_telegram_api_hash
-PHONE_NUMBER=your_phone_number
-BOT_USERNAME=walletx_solana_bot
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_KEY=your_supabase_anon_key
-
-
-4. Run the application:
-bash
-python main.py        
-
+# Supabase credentials
+SUPABASE_URL = "your_supabase_project_url"
+SUPABASE_KEY = "your_supabase_anon_key"
+```
 
 ## Usage
 
 1. Run the main application:
-bash
+```bash
 python main.py
-
+```
 
 2. Enter a valid Solana wallet address when prompted (44 characters)
 
@@ -69,19 +75,18 @@ python main.py
 - `main.py`: Main application entry point
 - `telegram_bot_client.py`: Handles Telegram bot interactions
 - `store_csv_to_supabase.py`: Manages data storage in Supabase
-- `inspect_csv.py`: CSV file processing and validation
 - `dashboard.py`: Streamlit dashboard for data visualization
+- `requirements.txt`: Project dependencies
+- `runtime.txt`: Python version specification for Streamlit Cloud
 
-## Database Schema
+## Deployment
 
-The Supabase database includes the following columns:
-- `wallet_address`: The Solana wallet address
-- `token_name`: Name of the token
-- `token_address`: Token contract address
-- `status`: Transaction status (Open/Closed)
-- `roi_percentage`: Return on Investment
-- `profit_sol`: Profit in SOL
-- And more transaction details...
+The application is deployed on Streamlit Cloud. To deploy your own instance:
+
+1. Fork this repository
+2. Add your secrets in Streamlit Cloud dashboard
+3. Select Python 3.12 in Advanced Settings
+4. Deploy the application
 
 ## Contributing
 
