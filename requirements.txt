@@ -1,5 +1,19 @@
-pandas
-supabase
-telethon
-streamlit
-plotly 
+# Core dependencies
+streamlit==1.42.0
+pandas==2.2.3
+plotly==6.0.0
+Telethon==1.38.1
+supabase==2.13.0
+
+# Additional dependencies
+python-dateutil==2.9.0.post0
+numpy==2.2.2
+pillow==11.1.0
+protobuf==5.29.3
+pytz==2025.1
+requests==2.32.3
+aiohttp==3.11.12
+httpx==0.28.1
+
+# Optional but recommended
+watchdog==6.0.0  # For better file system monitoring 
