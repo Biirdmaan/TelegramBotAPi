@@ -43,8 +43,8 @@ async def fetch_new_wallet_data(wallet_address, status_placeholder):
     try:
         # Set a timeout for the entire operation
         async with asyncio.timeout(30):
-            print("DEBUG: Starting fetch process...")  # Terminal debug message
-            status_placeholder.info('Fetching wallet data...')  # User message
+            print("DEBUG: Starting fetch process...")
+            status_placeholder.info('Fetching wallet data...')
             
             try:
                 client = TelegramBotClient()
@@ -62,20 +62,21 @@ async def fetch_new_wallet_data(wallet_address, status_placeholder):
                 print("DEBUG: Timeout during client.start()")
                 status_placeholder.error("Connection timeout. Please try again.")
                 return False
-            except Exception as e:
-                print(f"DEBUG: Error during client.start(): {str(e)}")
-                return False
             
             try:
                 print("DEBUG: Sending command to get file...")
+                # Check for rate limit before proceeding
+                messages = await client.client.get_messages(st.secrets["BOT_USERNAME"], limit=1)
+                if messages and "limit of 3 requests per day" in messages[0].text:
+                    status_placeholder.warning("⚠️ Rate limit reached: You have reached the limit of 3 requests per day! Please try again tomorrow.")
+                    return False
+                
                 csv_path = await asyncio.wait_for(
                     client.send_command_and_get_file(wallet_address, wait_time=25),
                     timeout=30
                 )
-                print(f"DEBUG: Got response, csv_path: {csv_path}")
                 
                 if not csv_path:
-                    print("DEBUG: No CSV path returned")
                     status_placeholder.error("No data available for this wallet")
                     return False
                 
@@ -97,10 +98,7 @@ async def fetch_new_wallet_data(wallet_address, status_placeholder):
                 return False
             except Exception as e:
                 print(f"DEBUG: Error getting data: {str(e)}")
-                if "limit of 3 requests per day" in str(e):
-                    status_placeholder.warning("⚠️ Rate limit reached: You have reached the limit of 3 requests per day!")
-                else:
-                    status_placeholder.error("Failed to fetch wallet data")
+                status_placeholder.error("Failed to fetch wallet data")
                 return False
             
     except Exception as e:
@@ -280,26 +278,34 @@ def display_wallet_data(df, selected_wallet):
     )
 
 def main():
-    set_page_config()
-    local_css()
-    
-    st.title("Solana Wallet Transaction Analyzer")
-    
-    # Debug information
-    st.sidebar.info(f"Python version: {sys.version}")
-    
+    """Main function for the Streamlit dashboard"""
     try:
-        # Load existing data
+        # Initialize page configuration FIRST
+        set_page_config()
+        
+        # Debug info only in console, not UI
+        print("Debug: Application Starting")
+        print(f"Debug: Python Version: {sys.version}")
+        
+        # Add custom CSS
+        local_css()
+        
+        st.title("Solana Wallet Transaction Analyzer")
+        
+        # Load existing data (debug to console only)
+        print("Debug: Loading data from Supabase...")
         df = load_data()
         
         if df.empty:
-            st.info("No data available. Please add a wallet using the form.")
-            return
+            print("Debug: No data found in database")
+        else:
+            print(f"Debug: Loaded {len(df)} records")
             
-        existing_wallets = sorted(df['wallet_address'].unique()) if not df.empty else []
+        # Get unique wallet addresses
+        existing_wallets = df['wallet_address'].unique().tolist() if not df.empty else []
         
-        # Create two columns with better proportions
-        col1, col2 = st.columns([1, 4])
+        # Create two columns
+        col1, col2 = st.columns([1, 2])
         
         # Left column for new wallet input
         with col1:
